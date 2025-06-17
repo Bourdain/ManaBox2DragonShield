@@ -57,43 +57,45 @@
 </style>
 
 <form class="App-form">
+   <div style="text-align: center;">
+       <img src="content/logo.png" alt="App Logo" style="width: 350px; margin: 20px auto;" />
+   </div>
 
-    <InputFile class="App-form" OnChange="HandleFileSelected" accept=".txt" />
-    <br />
+   <InputFile class="App-form" OnChange="HandleFileSelected" accept=".txt" />
+   <br />
 
-    <InputText class="App-form" Placeholder="Folder Name" @bind-Value="FolderName" />
-    <br />
+   <InputText class="App-form" Placeholder="Folder Name" @bind-Value="FolderName" />
+   <br />
 
-    <InputSelect class="App-form" @bind-Value="CardCondition">
-        <option value="" disabled>Card Condition</option>
-        <option value="Mint">Mint</option>
-        <option value="NearMint">Near Mint</option>
-        <option value="Excelent">Excelent</option>
-        <option value="Good">Good</option>
-        <option value="LightPlayed">Lightly Played</option>
-        <option value="Played">Played</option>
-        <option value="Poor">Poor</option>
-    </InputSelect>
+   <InputSelect class="App-form" @bind-Value="CardCondition">
+       <option value="" disabled>Card Condition</option>
+       <option value="Mint">Mint</option>
+       <option value="NearMint">Near Mint</option>
+       <option value="Excelent">Excelent</option>
+       <option value="Good">Good</option>
+       <option value="LightPlayed">Lightly Played</option>
+       <option value="Played">Played</option>
+       <option value="Poor">Poor</option>
+   </InputSelect>
 
-    <br />
-    <InputSelect class="App-form" @bind-Value="CardLanguage">
-        <option value="" disabled>Card Language</option>
-        <option value="English">English</option>
-        <option value="Spanish">Spanish</option>
-        <option value="French">French</option>
-        <option value="German">German</option>
-        <option value="Italian">Italian</option>
-        <option value="Portuguese">Portuguese</option>
-        <option value="Japanese">Japanese</option>
-        <option value="Chinese">Chinese</option>
-    </InputSelect>
+   <br />
+   <InputSelect class="App-form" @bind-Value="CardLanguage">
+       <option value="" disabled>Card Language</option>
+       <option value="English">English</option>
+       <option value="Spanish">Spanish</option>
+       <option value="French">French</option>
+       <option value="German">German</option>
+       <option value="Italian">Italian</option>
+       <option value="Portuguese">Portuguese</option>
+       <option value="Japanese">Japanese</option>
+       <option value="Chinese">Chinese</option>
+   </InputSelect>
 
-    <br />
-    <InputDate class="App-form" @bind-Value="DateBought" />
+   <br />
+   <InputDate class="App-form" @bind-Value="DateBought" />
 
-
-    <br />
-    <button class="App-form" @onclick="OnSubmit">Submit</button>
+   <br />
+   <button class="App-form" @onclick="OnSubmit">Submit</button>
 </form>
 
 @code {
