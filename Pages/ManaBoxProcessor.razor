@@ -1,5 +1,7 @@
 ﻿@using Mana2DragonShield.DataObjects
 @using Microsoft.JSInterop
+@using System.Text.Json
+@using System.Text.Json.Serialization
 
 @inject IJSRuntime JSRuntime
 
@@ -10,93 +12,93 @@
 <style>
 
     .App-form {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: #f9f9f9;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
     }
 
-        .App-form input,
-        .App-form select,
-        .App-form button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
-        }
+    .App-form input,
+    .App-form select,
+    .App-form button {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    }
 
-            .App-form input:focus,
-            .App-form select:focus {
-                border-color: #007bff;
-                outline: none;
-                box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-            }
+    .App-form input:focus,
+    .App-form select:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
 
-        .App-form button {
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
+    .App-form button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    }
 
-            .App-form button:hover {
-                background-color: #0056b3;
-            }
+    .App-form button:hover {
+    background-color: #0056b3;
+    }
 
     .file-label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
     }
 </style>
 
-<form class="App-form">
-   <div style="text-align: center;">
-       <img src="content/logo.png" alt="App Logo" style="width: 350px; margin: 20px auto;" />
-   </div>
+<div class="App-form">
+    <div style="text-align: center;">
+        <img src="content/logo.png" alt="App Logo" style="width: 350px; margin: 20px auto;" />
+    </div>
 
-   <InputFile class="App-form" OnChange="HandleFileSelected" accept=".txt" />
-   <br />
+    <InputFile class="App-form" OnChange="HandleFileSelected" accept=".txt" />
+    <br />
 
-   <InputText class="App-form" Placeholder="Folder Name" @bind-Value="FolderName" />
-   <br />
+    <InputText class="App-form" Placeholder="Folder Name" @bind-Value="FolderName" />
+    <br />
 
-   <InputSelect class="App-form" @bind-Value="CardCondition">
-       <option value="" disabled>Card Condition</option>
-       <option value="Mint">Mint</option>
-       <option value="NearMint">Near Mint</option>
-       <option value="Excelent">Excelent</option>
-       <option value="Good">Good</option>
-       <option value="LightPlayed">Lightly Played</option>
-       <option value="Played">Played</option>
-       <option value="Poor">Poor</option>
-   </InputSelect>
+    <InputSelect class="App-form" @bind-Value="CardCondition">
+        <option value="" disabled>Card Condition</option>
+        <option value="Mint">Mint</option>
+        <option value="NearMint">Near Mint</option>
+        <option value="Excelent">Excelent</option>
+        <option value="Good">Good</option>
+        <option value="LightPlayed">Lightly Played</option>
+        <option value="Played">Played</option>
+        <option value="Poor">Poor</option>
+    </InputSelect>
 
-   <br />
-   <InputSelect class="App-form" @bind-Value="CardLanguage">
-       <option value="" disabled>Card Language</option>
-       <option value="English">English</option>
-       <option value="Spanish">Spanish</option>
-       <option value="French">French</option>
-       <option value="German">German</option>
-       <option value="Italian">Italian</option>
-       <option value="Portuguese">Portuguese</option>
-       <option value="Japanese">Japanese</option>
-       <option value="Chinese">Chinese</option>
-   </InputSelect>
+    <br />
+    <InputSelect class="App-form" @bind-Value="CardLanguage">
+        <option value="" disabled>Card Language</option>
+        <option value="English">English</option>
+        <option value="Spanish">Spanish</option>
+        <option value="French">French</option>
+        <option value="German">German</option>
+        <option value="Italian">Italian</option>
+        <option value="Portuguese">Portuguese</option>
+        <option value="Japanese">Japanese</option>
+        <option value="Chinese">Chinese</option>
+    </InputSelect>
 
-   <br />
-   <InputDate class="App-form" @bind-Value="DateBought" />
+    <br />
+    <InputDate class="App-form" @bind-Value="DateBought" />
 
-   <br />
-   <button class="App-form" @onclick="OnSubmit">Submit</button>
-</form>
+    <br />
+    <button class="App-form" @onclick="OnSubmit">Submit</button>
+</div>
 
 @code {
     string CardLanguage { get; set; } = "English";
@@ -105,6 +107,8 @@
     DateTime? DateBought { get; set; } = DateTime.UtcNow.Date;
     IBrowserFile? UploadedFile { get; set; }
     string FileContents { get; set; }
+
+    Dictionary<string, string> SetCodes = new();
 
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
@@ -126,7 +130,7 @@
         FolderName = UploadedFile.Name.Replace(".txt", "");
     }
 
-    private void OnSubmit()
+    private async Task OnSubmit()
     {
 #if DEBUG
        Console.WriteLine(CardLanguage);
@@ -160,6 +164,22 @@
             toAdd.SetCode = item.Substring(idx2, idx3 - idx2).Trim();
             toAdd.SetCode = toAdd.SetCode.Replace("(", "");
 
+            string setName = "";
+            bool hasSetCode = SetCodes.TryGetValue(toAdd.SetCode, out setName);
+
+            if (!hasSetCode)
+            {
+                var success = await FetchSetDetails(toAdd.SetCode);
+                if (!success)
+                {
+                    Console.WriteLine($"Failed to fetch set for code: {toAdd.SetCode}");
+                    continue; // Or handle as needed
+                }
+                else{
+                    setName = SetCodes[toAdd.SetCode];
+                }
+            }
+
 
             var cardNumber = item.Substring(idx3 + 1, item.Length - idx3 - 1).Trim();
             var cardNumberSplit = cardNumber.Split(" ");
@@ -173,6 +193,7 @@
             toAdd.DateBought = DateBought.HasValue ? DateBought.Value.ToString("dd/MM/yyyy") : "01/01/2000";
             toAdd.FolderName = FolderName;
             toAdd.TradeQuantity = "0";
+            toAdd.SetName = setName;
             dto.Add(toAdd);
         }
 
@@ -182,7 +203,7 @@
 
         foreach (var entry in dto)
         {
-            csvBuilder.AppendLine($"{FolderName},{entry.Quantity},{entry.TradeQuantity},\"{entry.CardName}\",{entry.SetCode},,{entry.CardNumber},{entry.Condition},{entry.Printing},{entry.Language},0,{entry.DateBought}");
+            csvBuilder.AppendLine($"{FolderName},{entry.Quantity},{entry.TradeQuantity},\"{entry.CardName}\",{entry.SetCode},{entry.SetName},{entry.CardNumber},{entry.Condition},{entry.Printing},{entry.Language},0,{entry.DateBought}");
         }
 
         var csvContent = csvBuilder.ToString();
@@ -197,6 +218,98 @@
         JSRuntime.InvokeVoidAsync("BlazorDownloadFile", fileName, fileBytes);
 
     }
+
+    private async Task<bool> FetchSetDetails(string setCode)
+    {
+        try
+        {
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetAsync($"https://api.scryfall.com/sets/{setCode}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                var setDetails = System.Text.Json.JsonSerializer.Deserialize<ScryfallSet>(jsonResponse);
+
+#if DEBUG
+       Console.WriteLine($"Set Name: {setDetails?.Name}");
+       Console.WriteLine($"Released At: {setDetails?.ReleasedAt}");
+       Console.WriteLine($"Card Count: {setDetails?.CardCount}");
+#endif
+                if (setDetails != null)
+                {
+                    SetCodes.Add(setCode, setDetails.Name);
+                    return true;
+                }
+            }
+            else
+            {
+#if DEBUG
+       Console.WriteLine($"Failed to fetch set details for code: {setCode}. Status: {response.StatusCode}");
+#endif
+            }
+        }
+        catch (Exception ex)
+        {
+#if DEBUG
+       Console.WriteLine($"Error fetching set details: {ex.Message}");
+#endif
+        }
+        return false;
+
+    }
+
+    public class ScryfallSet
+    {
+        [JsonPropertyName("object")]
+        public string? Object { get; set; }
+
+        [JsonPropertyName("id")]
+        public Guid Id { get; set; }
+
+        [JsonPropertyName("code")]
+        public string? Code { get; set; }
+
+        [JsonPropertyName("tcgplayer_id")]
+        public int? TcgPlayerId { get; set; }
+
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
+
+        [JsonPropertyName("uri")]
+        public string? Uri { get; set; }
+
+        [JsonPropertyName("scryfall_uri")]
+        public string? ScryfallUri { get; set; }
+
+        [JsonPropertyName("search_uri")]
+        public string? SearchUri { get; set; }
+
+        [JsonPropertyName("released_at")]
+        public string? ReleasedAt { get; set; } // Or DateTime? if you prefer parsed date
+
+        [JsonPropertyName("set_type")]
+        public string? SetType { get; set; }
+
+        [JsonPropertyName("card_count")]
+        public int CardCount { get; set; }
+
+        [JsonPropertyName("parent_set_code")]
+        public string? ParentSetCode { get; set; }
+
+        [JsonPropertyName("digital")]
+        public bool Digital { get; set; }
+
+        [JsonPropertyName("nonfoil_only")]
+        public bool NonFoilOnly { get; set; }
+
+        [JsonPropertyName("foil_only")]
+        public bool FoilOnly { get; set; }
+
+        [JsonPropertyName("icon_svg_uri")]
+        public string? IconSvgUri { get; set; }
+    }
+
 
 }
 
