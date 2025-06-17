@@ -1,0 +1,160 @@
+﻿@using Mana2DragonShield.DataObjects
+@using Microsoft.JSInterop
+
+@inject IJSRuntime JSRuntime
+
+@page "/manaboxprocessor"
+
+<form class="App-form">
+
+    <InputText Placeholder="Folder Name" @bind-Value="FolderName" />
+    <br />
+
+    <InputSelect @bind-Value="CardCondition">
+        <option value="" disabled>Card Condition</option>
+        <option value="Mint">Mint</option>
+        <option value="NearMint">Near Mint</option>
+        <option value="Excelent">Excelent</option>
+        <option value="Good">Good</option>
+        <option value="LightPlayed">Lightly Played</option>
+        <option value="Played">Played</option>
+        <option value="Poor">Poor</option>
+    </InputSelect>
+
+    <br />
+    <InputSelect @bind-Value="CardLanguage">
+        <option value="" disabled>Card Language</option>
+        <option value="English">English</option>
+        <option value="Spanish">Spanish</option>
+        <option value="French">French</option>
+        <option value="German">German</option>
+        <option value="Italian">Italian</option>
+        <option value="Portuguese">Portuguese</option>
+        <option value="Japanese">Japanese</option>
+        <option value="Chinese">Chinese</option>
+    </InputSelect>
+
+    <br />
+    <InputDate @bind-Value="DateBought" />
+
+    <br />
+    <label for="fileInput" class="file-label">Select File</label>
+    <InputFile OnChange="HandleFileSelected" accept=".txt" />
+
+    <br />
+    <button class="App-submit" @onclick="OnSubmit">Submit</button>
+
+</form>
+
+@code {
+    string CardLanguage { get; set; } = "";
+    string CardCondition { get; set; } = "";
+    string FolderName { get; set; } = "";
+    DateTime? DateBought { get; set; }
+    IBrowserFile? UploadedFile { get; set; }
+    string FileContents { get; set; }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        // Access the uploaded file
+        UploadedFile = e.File;
+
+        // Read the file contents into the string FileContents
+        using var stream = UploadedFile.OpenReadStream();
+        using var reader = new StreamReader(stream);
+        FileContents = await reader.ReadToEndAsync();
+
+#if DEBUG
+       // Example: Print file details
+       Console.WriteLine($"File Name: {UploadedFile.Name}");
+       Console.WriteLine($"File Size: {UploadedFile.Size} bytes");
+       Console.WriteLine($"Content Type: {UploadedFile.ContentType}");
+       Console.WriteLine($"File Contents: {FileContents}");
+#endif
+    }
+
+    private void OnSubmit()
+    {
+#if DEBUG
+       Console.WriteLine(CardLanguage);
+       Console.WriteLine(CardCondition);
+       Console.WriteLine(FolderName);
+       Console.WriteLine(DateBought);
+#endif
+
+        List<ManaboxCsvDTO> dto = new();
+
+        foreach (var item in FileContents.Split(Environment.NewLine))
+        {
+            if (string.IsNullOrWhiteSpace(item))
+                continue;
+
+            var toAdd = new ManaboxCsvDTO();
+
+            var splitBySpaces = item.Split(" ");
+            if (splitBySpaces.Length > 1)
+            {
+                toAdd.Quantity = splitBySpaces[0].Trim();
+            }
+
+            var idx1 = item.IndexOf(' ');
+            var idx2 = item.IndexOf('(');
+
+            toAdd.CardName = item.Substring(idx1 + 1, (idx2 - idx1) - 1).Trim();
+
+            var idx3 = item.IndexOf(')');
+
+            toAdd.SetCode = item.Substring(idx2, idx3 - idx2).Trim();
+            toAdd.SetCode = toAdd.SetCode.Replace("(", "");
+
+
+            var cardNumber = item.Substring(idx3 + 1, item.Length - idx3 - 1).Trim();
+            var cardNumberSplit = cardNumber.Split(" ");
+
+            toAdd.CardNumber = cardNumberSplit[0].Trim();
+
+            toAdd.Printing = cardNumber.Contains("*F*") ? "Foil" : "Normal";
+
+            toAdd.Language = CardLanguage;
+            toAdd.Condition = CardCondition;
+            toAdd.DateBought = DateBought.HasValue ? DateBought.Value.ToString("dd/MM/yyyy") : "01/01/2000";
+            toAdd.FolderName = FolderName;
+            toAdd.TradeQuantity = "0";
+            dto.Add(toAdd);
+        }
+
+        // Convert dto to CSV format
+        var csvBuilder = new System.Text.StringBuilder();
+        csvBuilder.AppendLine("Folder Name,Quantity,Trade Quantity,Card Name,Set Code,Set Name,Card Number,Condition,Printing,Language,Price Bought,Date Bought");
+
+        foreach (var entry in dto)
+        {
+            csvBuilder.AppendLine($"{FolderName},{entry.Quantity},{entry.TradeQuantity},\"{entry.CardName}\",{entry.SetCode},,{entry.CardNumber},{entry.Condition},{entry.Printing},{entry.Language},0,{entry.DateBought}");
+        }
+
+        var csvContent = csvBuilder.ToString();
+        Console.WriteLine(csvContent);
+
+        // Create a temporary file and download it
+        var fileName = "DRGSHLD.csv";
+        var fileBytes = System.Text.Encoding.UTF8.GetBytes(csvContent);
+        var fileStream = new MemoryStream(fileBytes);
+
+        // Use JSRuntime to trigger file download
+        JSRuntime.InvokeVoidAsync("BlazorDownloadFile", fileName, fileBytes);
+
+    }
+
+}
+
+<script>
+
+    window.BlazorDownloadFile = (fileName, content) => {
+        const blob = new Blob([content], { type: 'text/csv' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    };
+</script>
