@@ -5,12 +5,66 @@
 
 @page "/manaboxprocessor"
 
+
+
+<style>
+
+    .App-form {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        font-family: Arial, sans-serif;
+    }
+
+        .App-form input,
+        .App-form select,
+        .App-form button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+            .App-form input:focus,
+            .App-form select:focus {
+                border-color: #007bff;
+                outline: none;
+                box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+            }
+
+        .App-form button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+            .App-form button:hover {
+                background-color: #0056b3;
+            }
+
+    .file-label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+</style>
+
 <form class="App-form">
 
-    <InputText Placeholder="Folder Name" @bind-Value="FolderName" />
+    <InputFile class="App-form" OnChange="HandleFileSelected" accept=".txt" />
     <br />
 
-    <InputSelect @bind-Value="CardCondition">
+    <InputText class="App-form" Placeholder="Folder Name" @bind-Value="FolderName" />
+    <br />
+
+    <InputSelect class="App-form" @bind-Value="CardCondition">
         <option value="" disabled>Card Condition</option>
         <option value="Mint">Mint</option>
         <option value="NearMint">Near Mint</option>
@@ -22,7 +76,7 @@
     </InputSelect>
 
     <br />
-    <InputSelect @bind-Value="CardLanguage">
+    <InputSelect class="App-form" @bind-Value="CardLanguage">
         <option value="" disabled>Card Language</option>
         <option value="English">English</option>
         <option value="Spanish">Spanish</option>
@@ -35,22 +89,18 @@
     </InputSelect>
 
     <br />
-    <InputDate @bind-Value="DateBought" />
+    <InputDate class="App-form" @bind-Value="DateBought" />
+
 
     <br />
-    <label for="fileInput" class="file-label">Select File</label>
-    <InputFile OnChange="HandleFileSelected" accept=".txt" />
-
-    <br />
-    <button class="App-submit" @onclick="OnSubmit">Submit</button>
-
+    <button class="App-form" @onclick="OnSubmit">Submit</button>
 </form>
 
 @code {
-    string CardLanguage { get; set; } = "";
-    string CardCondition { get; set; } = "";
+    string CardLanguage { get; set; } = "English";
+    string CardCondition { get; set; } = "NearMint";
     string FolderName { get; set; } = "";
-    DateTime? DateBought { get; set; }
+    DateTime? DateBought { get; set; } = DateTime.UtcNow.Date;
     IBrowserFile? UploadedFile { get; set; }
     string FileContents { get; set; }
 
@@ -71,6 +121,7 @@
        Console.WriteLine($"Content Type: {UploadedFile.ContentType}");
        Console.WriteLine($"File Contents: {FileContents}");
 #endif
+        FolderName = UploadedFile.Name.Replace(".txt", "");
     }
 
     private void OnSubmit()
