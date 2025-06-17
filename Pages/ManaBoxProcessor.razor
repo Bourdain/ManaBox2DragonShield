@@ -133,12 +133,12 @@
         }
 
         var csvContent = csvBuilder.ToString();
-        Console.WriteLine(csvContent);
-
+#if DEBUG
+    Console.WriteLine(csvContent);
+#endif
         // Create a temporary file and download it
         var fileName = "DRGSHLD.csv";
         var fileBytes = System.Text.Encoding.UTF8.GetBytes(csvContent);
-        var fileStream = new MemoryStream(fileBytes);
 
         // Use JSRuntime to trigger file download
         JSRuntime.InvokeVoidAsync("BlazorDownloadFile", fileName, fileBytes);
